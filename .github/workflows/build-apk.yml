@@ -7,6 +7,14 @@ on:
     branches: [ main, master ]
   workflow_dispatch:  # 允许手动触发
 
+env:
+  BUILD_NUMBER: 1
+  BUILD_VERSION: 1.0.0
+  PYTHON_VERSION: '3.12'
+  FLET_CLI_VERSION: 0.28.3
+  PYTHONUTF8: 1
+  FLET_CLI_NO_RICH_OUTPUT: 1
+
 jobs:
   build-android:
     runs-on: ubuntu-latest
@@ -15,44 +23,27 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
     
-    - name: Set up Python
+    - name: Setup Python ${{ env.PYTHON_VERSION }}
       uses: actions/setup-python@v5
       with:
-        python-version: '3.12'
+        python-version: ${{ env.PYTHON_VERSION }}
     
-    - name: Install Flet CLI
+    - name: Install flet-cli ${{ env.FLET_CLI_VERSION }}
       run: |
         python -m pip install --upgrade pip
-        pip install flet
-    
-    - name: Install Java (required for Android build)
-      uses: actions/setup-java@v4
-      with:
-        distribution: 'temurin'
-        java-version: '17'
+        pip install flet==$FLET_CLI_VERSION
     
     - name: Build APK
       run: |
-        echo "Starting APK build..."
-        flet build apk --verbose
-      continue-on-error: false
+        flet build apk --verbose --build-number=$BUILD_NUMBER --build-version=$BUILD_VERSION
     
-    - name: List build directory
-      if: always()
-      run: |
-        echo "=== Searching for APK files ==="
-        find . -name "*.apk" -type f 2>/dev/null || echo "No APK files found"
-        echo "=== Build directory structure ==="
-        ls -laR build/ 2>/dev/null || echo "No build directory"
-    
-    - name: Upload APK
+    - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: todo-app-release
-        path: |
-          build/apk/*.apk
-          build/app/outputs/flutter-apk/*.apk
+        name: todo-app-apk
+        path: build/apk
         if-no-files-found: error
+        overwrite: false
     
     - name: Create Release (on tag push)
       if: startsWith(github.ref, 'refs/tags/')
