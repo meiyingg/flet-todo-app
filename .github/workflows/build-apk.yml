@@ -20,21 +20,38 @@ jobs:
       with:
         python-version: '3.12'
     
-    - name: Install Flet
+    - name: Install Flet CLI
       run: |
         python -m pip install --upgrade pip
         pip install flet
     
+    - name: Install Java (required for Android build)
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+    
     - name: Build APK
       run: |
-        cd ${{ github.workspace }}
+        echo "Starting APK build..."
         flet build apk --verbose
+      continue-on-error: false
+    
+    - name: List build directory
+      if: always()
+      run: |
+        echo "=== Searching for APK files ==="
+        find . -name "*.apk" -type f 2>/dev/null || echo "No APK files found"
+        echo "=== Build directory structure ==="
+        ls -laR build/ 2>/dev/null || echo "No build directory"
     
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: todo-app-release
-        path: build/apk/app-release.apk
+        path: |
+          build/apk/*.apk
+          build/app/outputs/flutter-apk/*.apk
         if-no-files-found: error
     
     - name: Create Release (on tag push)
