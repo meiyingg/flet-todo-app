@@ -527,11 +527,3 @@ def main(page: ft.Page):
 
 if __name__ == "__main__":
     ft.app(main)
-        print("📱 Starting in Mobile-optimized mode...")
-        print(f"🔗 Access from mobile: http://{local_ip}:8550")
-        print("🔗 Or use: http://192.168.32.34:8550")
-        print("⚠️  Keep this window open to maintain the server")
-        ft.app(target=main, view=ft.AppView.FLET_APP_WEB, port=8550, host="0.0.0.0")
-    else:
-        # 默认桌面模式
-        ft.app(target=main)
